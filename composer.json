@@ -8,7 +8,7 @@
     },
     "autoload": {
         "psr-4": {
-            "JRHenderson\\Miniphy\\": "src/"
+            "JonathonHenderson\\Miniphy\\": "src/"
         }
     },
     "autoload-dev": {

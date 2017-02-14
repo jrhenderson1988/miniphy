@@ -1,6 +1,6 @@
 <?php
 
-use JRHenderson\Miniphy\Base;
+use JonathonHenderson\Miniphy\Base;
 
 class HtmlMinifierTest extends TestCase
 {

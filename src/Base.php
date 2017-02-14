@@ -1,6 +1,6 @@
 <?php
 
-namespace JRHenderson\Miniphy;
+namespace JonathonHenderson\Miniphy;
 
 class Base
 {
