@@ -1,0 +1,26 @@
+{
+    "name": "jrhenderson1988/miniphy",
+    "description": "A HTML/PHP template minifier. Includes support for Laravel's Blade compiler.",
+    "type": "library",
+    "require-dev": {
+        "php": ">=5.4.0",
+        "phpunit/phpunit": "^5.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "JRHenderson\\Miniphy\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "classmap": [
+            "tests/TestCase.php"
+        ]
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Jonathon Henderson",
+            "email": "jrhenderson1988@hotmail.com"
+        }
+    ]
+}
