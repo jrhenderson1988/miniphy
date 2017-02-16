@@ -1,15 +1,21 @@
 <?php
 
-use JonathonHenderson\Miniphy\Base;
+use Miniphy\Base;
 
 class HtmlMinifierTest extends TestCase
 {
-    public function testSomething()
+    public function testMiniphyHtmlReturnsInstanceOfHtmlMinifier()
     {
-        $value = 'test';
+        $miniphy = $this->createMiniphyInstance();
 
-        $base = new Base('test');
+        $this->assertInstanceOf('Miniphy\\Minifiers\\HtmlMinifier', $miniphy->html());
+    }
 
-        $this->assertEquals($base->get(), $value);
+    public function testSomethingElse()
+    {
+        $value = 'This is a test value';
+        $miniphy = $this->createMiniphyInstance();
+
+        $this->assertEquals($value, $miniphy->html($value));
     }
 }
