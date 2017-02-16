@@ -1,8 +1,8 @@
 <?php
 
-namespace Miniphy\Minifiers;
+namespace Miniphy\Drivers;
 
-interface MinifierInterface
+interface DriverInterface
 {
     /**
      * Minify the provided content.

@@ -2,41 +2,71 @@
 
 namespace Miniphy;
 
-use Miniphy\Minifiers\HtmlMinifier;
+use Closure;
+use Miniphy\Drivers\Html\RegexDriver as HtmlRegexDriver;
+use Miniphy\Exceptions\NoSuchDriverException;
 
 class Miniphy
 {
-    /**
-     * @var HtmlMinifier
-     */
-    protected $htmlMinifier;
+    protected $driverCache = [];
 
     /**
-     * Get an instance of the HTML minifier if the parameter is omitted or is null. Run some content through the
-     * minifier and return the result if the content is non-null.
+     * Get a HTML driver.
      *
-     * @param string|null $content
+     * @param string|null $driver
      *
-     * @return \Miniphy\Minifiers\HtmlMinifier|string
+     * @return \Miniphy\Drivers\DriverInterface
+     * @throws \Miniphy\Exceptions\NoSuchDriverException
      */
-    public function html($content = null)
+    public function html($driver = null)
     {
-        $minifier = $this->getHtmlMinifier();
+        $driver = !is_null($driver) ? $driver : $this->getDefaultHtmlDriverKey();
 
-        return is_null($content) ? $minifier : $minifier->minify($content);
+        $method = 'getHtml' . trim(ucfirst(strtolower($driver))) . 'Driver';
+
+        if (!method_exists($this, $method)) {
+            throw new NoSuchDriverException("The specified driver, '{$driver}' does not exist.");
+        }
+
+        return $this->$method();
     }
 
     /**
-     * Get an instance of the HTML minifier.
+     * Create a Regex HTML driver.
      *
-     * @return \Miniphy\Minifiers\HtmlMinifier
+     * @return \Miniphy\Drivers\Html\RegexDriver
      */
-    protected function getHtmlMinifier()
+    protected function getHtmlRegexDriver()
     {
-        if (!$this->htmlMinifier) {
-            $this->htmlMinifier = new HtmlMinifier($this);
+        return $this->getDriver('html.regex', function () {
+            return new HtmlRegexDriver($this);
+        });
+    }
+
+    /**
+     * Get the default HTML driver key.
+     *
+     * @return string
+     */
+    protected function getDefaultHtmlDriverKey()
+    {
+        return 'regex';
+    }
+
+    /**
+     * Create a driver with the provided key and closure.
+     *
+     * @param string $key
+     * @param \Closure $closure
+     *
+     * @return mixed
+     */
+    protected function getDriver($key, Closure $closure)
+    {
+        if (!isset($this->driverCache[$key])) {
+            $this->driverCache[$key] = $closure();
         }
 
-        return $this->htmlMinifier;
+        return $this->driverCache[$key];
     }
 }

@@ -1,10 +1,10 @@
 <?php
 
-namespace Miniphy\Minifiers;
+namespace Miniphy\Drivers;
 
 use Miniphy\Miniphy;
 
-abstract class AbstractMinifier implements MinifierInterface
+abstract class AbstractDriver implements DriverInterface
 {
     /**
      * @var \Miniphy\Miniphy
@@ -12,7 +12,7 @@ abstract class AbstractMinifier implements MinifierInterface
     protected $miniphy;
 
     /**
-     * AbstractMinifier constructor.
+     * AbstractDriver constructor.
      *
      * @param \Miniphy\Miniphy $miniphy
      */

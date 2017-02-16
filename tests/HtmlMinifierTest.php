@@ -1,21 +1,19 @@
 <?php
 
-use Miniphy\Base;
-
 class HtmlMinifierTest extends TestCase
 {
     public function testMiniphyHtmlReturnsInstanceOfHtmlMinifier()
     {
         $miniphy = $this->createMiniphyInstance();
 
-        $this->assertInstanceOf('Miniphy\\Minifiers\\HtmlMinifier', $miniphy->html());
+        $this->assertInstanceOf('Miniphy\\Drivers\\Html\\RegexDriver', $miniphy->html());
     }
 
     public function testSomethingElse()
     {
-        $value = 'This is a test value';
+        $value = 'test';
         $miniphy = $this->createMiniphyInstance();
 
-        $this->assertEquals($value, $miniphy->html($value));
+        $this->assertEquals($value, $miniphy->html()->minify($value));
     }
 }
