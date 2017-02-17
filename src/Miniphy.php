@@ -8,7 +8,19 @@ use Miniphy\Exceptions\NoSuchDriverException;
 
 class Miniphy
 {
+    /**
+     * Stores instances of all of the created drivers to save re-creating them whenever they're called.
+     *
+     * @var array
+     */
     protected $driverCache = [];
+
+    /**
+     * The default HTML driver.
+     *
+     * @var string
+     */
+    protected $defaultHtmlDriverKey = 'regex';
 
     /**
      * Get a HTML driver.
@@ -36,7 +48,7 @@ class Miniphy
      *
      * @return \Miniphy\Drivers\Html\RegexDriver
      */
-    protected function getHtmlRegexDriver()
+    public function getHtmlRegexDriver()
     {
         return $this->getDriver('html.regex', function () {
             return new HtmlRegexDriver($this);
@@ -48,9 +60,19 @@ class Miniphy
      *
      * @return string
      */
-    protected function getDefaultHtmlDriverKey()
+    public function getDefaultHtmlDriverKey()
     {
-        return 'regex';
+        return $this->defaultHtmlDriverKey;
+    }
+
+    /**
+     * Set the default HTML driver key.
+     *
+     * @param string $key
+     */
+    public function setDefaultHtmlDriverKey($key)
+    {
+        $this->defaultHtmlDriverKey = $key;
     }
 
     /**
