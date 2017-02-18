@@ -3,8 +3,10 @@
 namespace Miniphy;
 
 use Closure;
+use Miniphy\Drivers\DriverInterface;
 use Miniphy\Drivers\Html\RegexDriver as HtmlRegexDriver;
 use Miniphy\Exceptions\NoSuchDriverException;
+use Miniphy\Helpers\StringHelper;
 
 class Miniphy
 {
@@ -23,6 +25,21 @@ class Miniphy
     protected $defaultHtmlDriverKey = 'regex';
 
     /**
+     * String utilities class.
+     *
+     * @var \Miniphy\Helpers\StringHelper
+     */
+    protected $stringHelper;
+
+    /**
+     * Miniphy constructor.
+     */
+    public function __construct()
+    {
+        $this->stringHelper = new StringHelper();
+    }
+
+    /**
      * Get a HTML driver.
      *
      * @param string|null $driver
@@ -34,13 +51,29 @@ class Miniphy
     {
         $driver = !is_null($driver) ? $driver : $this->getDefaultHtmlDriverKey();
 
-        $method = 'getHtml' . trim(ucfirst(strtolower($driver))) . 'Driver';
+        return $this->getDriver('html-' . $driver);
+    }
 
-        if (!method_exists($this, $method)) {
-            throw new NoSuchDriverException("The specified driver, '{$driver}' does not exist.");
+    /**
+     * Get the driver specified by the base and key from the driver cache. Create the driver if it does not exist.
+     *
+     * @param string $key
+     *
+     * @return DriverInterface
+     * @throws \Miniphy\Exceptions\NoSuchDriverException
+     */
+    protected function getDriver($key)
+    {
+        if (isset($this->driverCache[$key])) {
+            return $this->driverCache[$key];
         }
 
-        return $this->$method();
+        $method = 'create' . $this->getStringHelper()->studly($key) . 'Driver';
+        if (!method_exists($this, $method)) {
+            throw new NoSuchDriverException("The specified driver, '{$key}' does not exist.");
+        }
+
+        return $this->driverCache[$key] = $this->$method();
     }
 
     /**
@@ -48,11 +81,9 @@ class Miniphy
      *
      * @return \Miniphy\Drivers\Html\RegexDriver
      */
-    public function getHtmlRegexDriver()
+    public function createHtmlRegexDriver()
     {
-        return $this->getDriver('html.regex', function () {
-            return new HtmlRegexDriver($this);
-        });
+        return new HtmlRegexDriver($this);
     }
 
     /**
@@ -76,19 +107,12 @@ class Miniphy
     }
 
     /**
-     * Create a driver with the provided key and closure.
+     * Get the string helper.
      *
-     * @param string $key
-     * @param \Closure $closure
-     *
-     * @return mixed
+     * @return \Miniphy\Helpers\StringHelper
      */
-    protected function getDriver($key, Closure $closure)
+    public function getStringHelper()
     {
-        if (!isset($this->driverCache[$key])) {
-            $this->driverCache[$key] = $closure();
-        }
-
-        return $this->driverCache[$key];
+        return $this->stringHelper;
     }
 }
