@@ -4,7 +4,7 @@ namespace Miniphy\Drivers;
 
 use Miniphy\Miniphy;
 
-abstract class AbstractDriver implements DriverInterface
+abstract class AbstractDriver
 {
     /**
      * @var \Miniphy\Miniphy
@@ -46,7 +46,7 @@ abstract class AbstractDriver implements DriverInterface
      */
     protected function reserve($content, $prefix = '')
     {
-        $key = (!empty($prefix) ? $prefix . '-' : '') . $this->minify->getStringHelper()->random();
+        $key = (!empty($prefix) ? $prefix . '-' : '') . $this->miniphy->getStringHelper()->random();
 
         while (isset($this->reservations[$key])) {
             $key = (!empty($prefix) ? $prefix . '-' : '') . $this->string->getStringHelper()->random();
@@ -67,11 +67,21 @@ abstract class AbstractDriver implements DriverInterface
     protected function restoreReservations($content)
     {
         foreach ($this->reservations as $key => $reserved) {
-            $search = str_replace('%key%', $key, $this->reservationTagFormat);
-
-            $content = str_replace($search, $reserved, $content);
+            $content = str_replace($this->buildReservationTag($key), $reserved, $content);
         }
 
         return $content;
+    }
+
+    /**
+     * Build a reservation tag using the reservation tag format and the provided key.
+     *
+     * @param string $key
+     *
+     * @return string
+     */
+    protected function buildReservationTag($key)
+    {
+        return str_replace('%key%', $key, $this->reservationTagFormat);
     }
 }

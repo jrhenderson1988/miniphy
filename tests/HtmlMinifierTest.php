@@ -9,11 +9,22 @@ class HtmlMinifierTest extends TestCase
         $this->assertInstanceOf('Miniphy\\Drivers\\Html\\RegexDriver', $miniphy->html());
     }
 
-    public function testSomethingElse()
+    public function testMinification()
     {
-        $value = 'test';
-        $miniphy = $this->createMiniphyInstance();
+        $htmlMinifier = $this->createMiniphyInstance()->html();
 
-        $this->assertEquals($value, $miniphy->html()->minify($value));
+        foreach ($this->directoriesIn('html') as $directory) {
+            if (($input = $this->loadFile('html/' . $directory . '/input.html')) !== false) {
+                echo "Testing directory {$directory}.\n";
+                foreach (['soft' => 1, 'medium' => 2, 'hard' => 3] as $modeName => $mode) {
+                    if (($output = $this->loadFile('html/' . $directory . '/output_mode_' . $modeName . '.html')) !== false) {
+                        echo "Mode {$modeName}.\n";
+                        $htmlMinifier->setMode($mode);
+
+                        $this->assertEquals($output, $htmlMinifier->minify($input));
+                    }
+                }
+            }
+        }
     }
 }

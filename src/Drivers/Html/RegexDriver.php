@@ -2,10 +2,7 @@
 
 namespace Miniphy\Drivers\Html;
 
-use Miniphy\Drivers\AbstractDriver;
-use Miniphy\Drivers\DriverInterface;
-
-class RegexDriver extends AbstractDriver implements DriverInterface
+class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
 {
     /**
      * Minify the provided content.
@@ -17,15 +14,14 @@ class RegexDriver extends AbstractDriver implements DriverInterface
     public function minify($content)
     {
         $content = $this->normalise($content);
-        $content = $this->reserveTextAreas($content);
         $content = $this->reservePres($content);
+        $content = $this->reserveTextAreas($content);
         $content = $this->reserveScripts($content);
         $content = $this->reserveStyles($content);
         $content = $this->removeHtmlComments($content);
         $content = $this->trimLines($content);
         $content = $this->removeWhitespaceAroundIEConditionals($content);
-        $content = $this->removeWhitespaceAroundHtmlTags($content);
-        $content = $this->replaceExistingLineBreaksWithSpace($content);
+        $content = $this->removeWhitespaceAroundHtmlElements($content);
         $content = $this->restoreReservations($content);
 
         return $content;
@@ -74,7 +70,7 @@ class RegexDriver extends AbstractDriver implements DriverInterface
     protected function patternReserve($pattern, $content, $prefix = '')
     {
         return $this->patternReplace($pattern, function ($matches) use($prefix) {
-            return str_replace('%key%',  $this->reserve($matches[0], $prefix), $this->reservationTagFormat);
+            return $this->buildReservationTag($this->reserve($matches[0], $prefix));
         }, $content);
     }
 
@@ -178,7 +174,13 @@ class RegexDriver extends AbstractDriver implements DriverInterface
      */
     protected function trimLines($content)
     {
-        return $this->patternRemove('/^\\s+|\\s+$/m', $content);
+        $result = '';
+
+        foreach (explode("\n", $content) as $line) {
+            $result .= "\n" . trim($line);
+        }
+
+        return trim($result);
     }
 
     /**
@@ -221,5 +223,37 @@ class RegexDriver extends AbstractDriver implements DriverInterface
         $pattern = '/\\n+/';
 
         return $this->patternReplace($pattern, ' ', $content);
+    }
+
+    /**
+     * Remove whitespace around HTML elements in the content. There are 3 modes that define the nature of this method.
+     *
+     * - MODE_SOFT:   Replace whitespace around ALL elements with a single space or newline.
+     * - MODE_MEDIUM: Remove ALL whitespace around all non-inline elements (Bear in mind, CSS can make inline elements
+     *                behave like block, or block elements like inline etc.)
+     * - MODE_HARD:   Remove ALL whitespace around all elements, which may result in inline elements not being spaced.
+     *
+     * @param string $content
+     *
+     * @return string
+     */
+    protected function removeWhitespaceAroundHtmlElements($content)
+    {
+        $htmlElementPattern = '(<\\/?([a-z0-9-]+?)\\b[^>]*?\\/?>)';
+        if ($this->getMode() == static::MODE_SOFT) {
+            $content = $this->patternReplace('/\\s+' . $htmlElementPattern . '/i', ' $1', $content);
+
+            return $this->patternReplace('/' . $htmlElementPattern . '\\s+/i', '$1 ', $content);
+        } elseif ($this->getMode() == static::MODE_MEDIUM) {
+            return $this->patternReplace('/\\s*' . $htmlElementPattern . '\\s*/i', function ($matches) {
+                if (!isset($matches[2])) {
+                    return $matches[0];
+                }
+
+                return $this->isInline($matches[2]) ? $matches[0] : $matches[1];
+            }, $content);
+        } else {
+            return $this->patternReplace('/\\s*' . $htmlElementPattern . '\\s*/i', '$1', $content);
+        }
     }
 }

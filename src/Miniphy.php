@@ -2,7 +2,6 @@
 
 namespace Miniphy;
 
-use Closure;
 use Miniphy\Drivers\DriverInterface;
 use Miniphy\Drivers\Html\RegexDriver as HtmlRegexDriver;
 use Miniphy\Exceptions\NoSuchDriverException;
