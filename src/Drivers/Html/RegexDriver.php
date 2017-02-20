@@ -2,6 +2,7 @@
 
 namespace Miniphy\Drivers\Html;
 
+// TODO: Make the removal of whitespace around IE conditionals take into account the mode.
 class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
 {
     /**
