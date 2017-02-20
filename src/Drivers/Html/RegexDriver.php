@@ -20,6 +20,7 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         $content = $this->reserveStyles($content);
         $content = $this->removeHtmlComments($content);
         $content = $this->trimLines($content);
+        $content = $this->removeNewLineCharactersBetweenAttributes($content);
         $content = $this->removeWhitespaceAroundIEConditionals($content);
         $content = $this->removeWhitespaceAroundHtmlElements($content);
         $content = $this->restoreReservations($content);
@@ -192,9 +193,30 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
      */
     protected function removeWhitespaceAroundIEConditionals($content)
     {
-        $pattern = '/\\s+(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)/';
+        $pattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
 
         return $this->patternReplace($pattern, '$1', $content);
+    }
+
+    /**
+     * Remove new line characters between HTML attributes.
+     *
+     * @param string $content
+     *
+     * @return string
+     */
+    protected function removeNewLineCharactersBetweenAttributes($content)
+    {
+        return $this->patternReplace('/<[a-z0-9-]+?\\b[^>]*?\\/?>/i', function ($matches) {
+            if (strpos($matches[0], "\n") === false) {
+                return $matches[0];
+            }
+
+            // ([^\s"'>\/=]+(?:=(?:(?:"[^"]*")|(?:'[^']*')|(?:[^ ]+)))?)\s*\n\s*
+            return $this->patternReplace(
+                '/([^\s"\'>\/=]+(?:=(?:(?:"[^"]*")|(?:\'[^\']*\')|(?:[^ ]+)))?)\s*\n\s*/', '$1 ', $matches[0]
+            );
+        }, $content);
     }
 
     /**
