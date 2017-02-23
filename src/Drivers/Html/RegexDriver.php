@@ -190,32 +190,96 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
     protected function removeWhiteSpace($content)
     {
         $ieConditionalPattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
+        $htmlTagPattern = '(<(?:(?:([a-z0-9-]+?)\\b[^>]*?\\s*?\\/?)|(?:\\/([a-z0-9-]+?)\\s*?))>)';
+
+        $openingTag = '(<([a-z0-9-]+?)\\b[^>]*?\\/?\\s*?>)';
+        $closingTag = '(<\\/([a-z0-9-]+?)\\b[^>]*>)';
+
+        $ieConditionalReplacements = [
+            static::MODE_SOFT => ' $1 ',
+            static::MODE_MEDIUM => '$1',
+            static::MODE_HARD => '$1'
+        ];
+
+        $spaceBeforeIfInline = function ($matches) {
+            return ($this->isInline($matches[2]) ? ' ' : '') . $matches[1];
+        };
+
+        $spaceAfterIfInline = function ($matches) {
+            return $matches[1] . ($this->isInline($matches[2]) ? ' ' : '');
+        };
+
+        $htmlOpeningTagReplacements = [
+            static::MODE_SOFT => [' $1', '$1 '],
+            static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
+            static::MODE_HARD => ['$1', '$1']
+        ];
+
+        $htmlClosingTagReplacements = [
+            static::MODE_SOFT => [' $1', '$1 '],
+            static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
+            static::MODE_HARD => ['$1', '$1'],
+        ];
+
+
 
         if ($this->mode == static::MODE_SOFT) {
             $content = $this->patternReplace($ieConditionalPattern, ' $1 ', $content);
+
+            $content = $this->patternReplace('/\\s+' . $openingTag . '/i', ' $1', $content);
+            $content = $this->patternReplace('/' . $openingTag . '\\s+/i', '$1 ', $content);
+            $content = $this->patternReplace('/\\s+' . $closingTag . '/i', ' $1', $content);
+            $content = $this->patternReplace('/' . $closingTag . '\\s+/i', '$1 ', $content);
+
+            return $content;
         }
 
         if ($this->mode == static::MODE_MEDIUM) {
-            $content = $this->patternReplace($ieConditionalPattern, ' $1 ', $content);
+            $content = $this->patternReplace($ieConditionalPattern, '$1', $content);
+
+            $content = $this->patternReplace('/\\s+' . $openingTag . '/i', function ($matches) {
+                return ($this->isInline($matches[2]) ? ' ' : '') . $matches[1];
+            }, $content);
+            $content = $this->patternReplace('/' . $openingTag . '\\s+/i', function ($matches) {
+                return $matches[1] . ($this->isInline($matches[2]) ? ' ' : '');
+            }, $content);
+            $content = $this->patternReplace('/\\s+' . $closingTag . '/i', function ($matches) {
+                return ($this->isInline($matches[2]) ? ' ' : '') . $matches[1];
+            }, $content);
+            $content = $this->patternReplace('/' . $closingTag . '\\s+/i', function ($matches) {
+                return $matches[1] . ($this->isInline($matches[2]) ? ' ' : '');
+            }, $content);
+
+            return $content;
         }
 
+        if ($this->mode == static::MODE_HARD) {
+            $content = $this->patternReplace($ieConditionalPattern, '$1', $content);
+
+            $content = $this->patternReplace('/\\s+' . $openingTag . '/i', '$1', $content);
+            $content = $this->patternReplace('/' . $openingTag . '\\s+/i', '$1', $content);
+            $content = $this->patternReplace('/\\s+' . $closingTag . '/i', '$1', $content);
+            $content = $this->patternReplace('/' . $closingTag . '\\s+/i', '$1', $content);
+
+            return $content;
+        }
 
         return $content;
     }
 
-    /**
-     * Remove whitespace around IE conditional comments, both the opening and closing tags.
-     *
-     * @param string $content
-     *
-     * @return string
-     */
-    protected function removeWhitespaceAroundIEConditionals($content)
-    {
-        $pattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
-
-        return $this->patternReplace($pattern, ' $1 ', $content);
-    }
+//    /**
+//     * Remove whitespace around IE conditional comments, both the opening and closing tags.
+//     *
+//     * @param string $content
+//     *
+//     * @return string
+//     */
+//    protected function removeWhitespaceAroundIEConditionals($content)
+//    {
+//        $pattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
+//
+//        return $this->patternReplace($pattern, ' $1 ', $content);
+//    }
 
     /**
      * Remove new line characters between HTML attributes.
@@ -238,33 +302,33 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         }, $content);
     }
 
-    /**
-     * Remote whitespace around opening and closing HTML tags. Allow also for self closing tags.
-     *
-     * @param string $content
-     *
-     * @return string
-     */
-    protected function removeWhitespaceAroundHtmlTags($content)
-    {
-        $pattern = '/\\s*?(<([a-z0-9-]+?\\b[^>]*?\\s*?\\/?|\\/[a-z0-9-]+?\\s*?)>)\s*/i';
+//    /**
+//     * Remote whitespace around opening and closing HTML tags. Allow also for self closing tags.
+//     *
+//     * @param string $content
+//     *
+//     * @return string
+//     */
+//    protected function removeWhitespaceAroundHtmlTags($content)
+//    {
+//        $pattern = '/\\s*?(<([a-z0-9-]+?\\b[^>]*?\\s*?\\/?|\\/[a-z0-9-]+?\\s*?)>)\s*/i';
+//
+//        return $this->patternReplace($pattern, ' $1 ', $content);
+//    }
 
-        return $this->patternReplace($pattern, ' $1 ', $content);
-    }
-
-    /**
-     * Replace existing
-     *
-     * @param string $content
-     *
-     * @return string
-     */
-    protected function replaceExistingLineBreaksWithSpace($content)
-    {
-        $pattern = '/\\n+/';
-
-        return $this->patternReplace($pattern, ' ', $content);
-    }
+//    /**
+//     * Replace existing
+//     *
+//     * @param string $content
+//     *
+//     * @return string
+//     */
+//    protected function replaceExistingLineBreaksWithSpace($content)
+//    {
+//        $pattern = '/\\n+/';
+//
+//        return $this->patternReplace($pattern, ' ', $content);
+//    }
 
     /**
      * Remove whitespace around HTML elements in the content. There are 3 modes that define the nature of this method.
