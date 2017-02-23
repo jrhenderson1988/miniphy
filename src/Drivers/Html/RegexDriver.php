@@ -22,8 +22,9 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         $content = $this->removeHtmlComments($content);
         $content = $this->trimLines($content);
         $content = $this->removeNewLineCharactersBetweenAttributes($content);
-        $content = $this->removeWhitespaceAroundIEConditionals($content);
-        $content = $this->removeWhitespaceAroundHtmlElements($content);
+
+        $content = $this->removeWhiteSpace($content);
+
         $content = $this->restoreReservations($content);
 
         return $content;
@@ -185,6 +186,23 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         return trim($result);
     }
 
+
+    protected function removeWhiteSpace($content)
+    {
+        $ieConditionalPattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
+
+        if ($this->mode == static::MODE_SOFT) {
+            $content = $this->patternReplace($ieConditionalPattern, ' $1 ', $content);
+        }
+
+        if ($this->mode == static::MODE_MEDIUM) {
+            $content = $this->patternReplace($ieConditionalPattern, ' $1 ', $content);
+        }
+
+
+        return $content;
+    }
+
     /**
      * Remove whitespace around IE conditional comments, both the opening and closing tags.
      *
@@ -196,7 +214,7 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
     {
         $pattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
 
-        return $this->patternReplace($pattern, '$1', $content);
+        return $this->patternReplace($pattern, ' $1 ', $content);
     }
 
     /**
@@ -267,7 +285,9 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
             $content = $this->patternReplace('/\\s+' . $htmlElementPattern . '/i', ' $1', $content);
 
             return $this->patternReplace('/' . $htmlElementPattern . '\\s+/i', '$1 ', $content);
-        } elseif ($this->getMode() == static::MODE_MEDIUM) {
+        }
+
+        if ($this->getMode() == static::MODE_MEDIUM) {
             return $this->patternReplace('/\\s*' . $htmlElementPattern . '\\s*/i', function ($matches) {
                 if (!isset($matches[2])) {
                     return $matches[0];
@@ -275,8 +295,8 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
 
                 return $this->isInline($matches[2]) ? $matches[0] : $matches[1];
             }, $content);
-        } else {
-            return $this->patternReplace('/\\s*' . $htmlElementPattern . '\\s*/i', '$1', $content);
         }
+
+        return $this->patternReplace('/\\s*' . $htmlElementPattern . '\\s*/i', '$1', $content);
     }
 }
