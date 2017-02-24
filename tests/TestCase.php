@@ -2,11 +2,23 @@
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * Create a Miniphy instance.
+     *
+     * @return \Miniphy\Miniphy
+     */
     public function createMiniphyInstance()
     {
         return new Miniphy\Miniphy();
     }
 
+    /**
+     * Load the provided file into a string and trim it's contents. Return false on error.
+     *
+     * @param string $path
+     *
+     * @return bool|string
+     */
     public function loadFile($path)
     {
         $path = rtrim(__DIR__, '/') . '/' . ltrim($path, '/');
@@ -18,6 +30,14 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return trim(file_get_contents($path));
     }
 
+    /**
+     * Get a list of directory names inside the provided directory. The directory provided is considered to be relative
+     * to the tests directory and any leading forward slashes will be stripped off.
+     *
+     * @param string $dir
+     *
+     * @return array
+     */
     public function directoriesIn($dir)
     {
         $directories = [];

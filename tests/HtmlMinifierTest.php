@@ -15,13 +15,9 @@ class HtmlMinifierTest extends TestCase
 
         foreach ($this->directoriesIn('html') as $directory) {
             if (($input = $this->loadFile('html/' . $directory . '/input.html')) !== false) {
-                echo "Testing directory {$directory}.\n";
                 foreach (['soft' => 1, 'medium' => 2, 'hard' => 3] as $modeName => $mode) {
                     if (($output = $this->loadFile('html/' . $directory . '/output_mode_' . $modeName . '.html')) !== false) {
-                        echo "Mode {$modeName}.\n";
-                        $htmlMinifier->setMode($mode);
-
-                        $this->assertEquals($output, $htmlMinifier->minify($input));
+                        $this->assertEquals($output, $htmlMinifier->mode($mode)->minify($input));
                     }
                 }
             }

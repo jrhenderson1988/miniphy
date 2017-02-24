@@ -58,9 +58,11 @@ abstract class AbstractHtmlDriver extends AbstractDriver
     }
 
     /**
-     * Set the mode.
+     * Set the mode. The current instance is returned for chaining.
      *
      * @param int $mode
+     *
+     * @return $this
      */
     public function setMode($mode)
     {
@@ -69,6 +71,8 @@ abstract class AbstractHtmlDriver extends AbstractDriver
         }
 
         $this->mode = $mode;
+
+        return $this;
     }
 
     /**
@@ -91,6 +95,23 @@ abstract class AbstractHtmlDriver extends AbstractDriver
     public function isValidMode($mode)
     {
         return is_int($mode) && in_array($mode, [static::MODE_SOFT, static::MODE_MEDIUM, static::MODE_HARD]);
+    }
+
+    /**
+     * Get or set the mode. If the parameter is not provided or it is null, the current mode is returned. If the
+     * parameter is provided and not null, the current mode will be set and the current driver instance is returned.
+     *
+     * @param null|int $mode
+     *
+     * @return int|$this
+     */
+    public function mode($mode = null)
+    {
+        if (is_null($mode)) {
+            return $this->getMode();
+        }
+
+        return $this->setMode($mode);
     }
 
     /**

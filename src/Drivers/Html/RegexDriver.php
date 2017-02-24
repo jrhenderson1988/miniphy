@@ -260,9 +260,6 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
             $beforeReplacement = $replacements[0];
             $afterReplacement = $replacements[1];
 
-            if ($this->mode == static::MODE_SOFT)
-                var_dump($pattern);
-
             $content = $this->patternReplace('/\\s+' . $pattern . '/i', $beforeReplacement, $content);
             $content = $this->patternReplace('/' . $pattern . '\\s+/i', $afterReplacement, $content);
         }
