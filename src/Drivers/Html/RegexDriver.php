@@ -2,7 +2,6 @@
 
 namespace Miniphy\Drivers\Html;
 
-// TODO: Make the removal of whitespace around IE conditionals take into account the mode.
 class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
 {
     /**
@@ -22,9 +21,7 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         $content = $this->removeHtmlComments($content);
         $content = $this->trimLines($content);
         $content = $this->removeNewLineCharactersBetweenAttributes($content);
-
         $content = $this->removeWhiteSpace($content);
-
         $content = $this->restoreReservations($content);
 
         return $content;
@@ -186,101 +183,6 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         return trim($result);
     }
 
-
-    protected function removeWhiteSpace($content)
-    {
-        $ieConditionalPattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
-        $htmlTagPattern = '(<(?:(?:([a-z0-9-]+?)\\b[^>]*?\\s*?\\/?)|(?:\\/([a-z0-9-]+?)\\s*?))>)';
-
-        $openingTag = '(<([a-z0-9-]+?)\\b[^>]*?\\/?\\s*?>)';
-        $closingTag = '(<\\/([a-z0-9-]+?)\\b[^>]*>)';
-
-        $ieConditionalReplacements = [
-            static::MODE_SOFT => ' $1 ',
-            static::MODE_MEDIUM => '$1',
-            static::MODE_HARD => '$1'
-        ];
-
-        $spaceBeforeIfInline = function ($matches) {
-            return ($this->isInline($matches[2]) ? ' ' : '') . $matches[1];
-        };
-
-        $spaceAfterIfInline = function ($matches) {
-            return $matches[1] . ($this->isInline($matches[2]) ? ' ' : '');
-        };
-
-        $htmlOpeningTagReplacements = [
-            static::MODE_SOFT => [' $1', '$1 '],
-            static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
-            static::MODE_HARD => ['$1', '$1']
-        ];
-
-        $htmlClosingTagReplacements = [
-            static::MODE_SOFT => [' $1', '$1 '],
-            static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
-            static::MODE_HARD => ['$1', '$1'],
-        ];
-
-
-
-        if ($this->mode == static::MODE_SOFT) {
-            $content = $this->patternReplace($ieConditionalPattern, ' $1 ', $content);
-
-            $content = $this->patternReplace('/\\s+' . $openingTag . '/i', ' $1', $content);
-            $content = $this->patternReplace('/' . $openingTag . '\\s+/i', '$1 ', $content);
-            $content = $this->patternReplace('/\\s+' . $closingTag . '/i', ' $1', $content);
-            $content = $this->patternReplace('/' . $closingTag . '\\s+/i', '$1 ', $content);
-
-            return $content;
-        }
-
-        if ($this->mode == static::MODE_MEDIUM) {
-            $content = $this->patternReplace($ieConditionalPattern, '$1', $content);
-
-            $content = $this->patternReplace('/\\s+' . $openingTag . '/i', function ($matches) {
-                return ($this->isInline($matches[2]) ? ' ' : '') . $matches[1];
-            }, $content);
-            $content = $this->patternReplace('/' . $openingTag . '\\s+/i', function ($matches) {
-                return $matches[1] . ($this->isInline($matches[2]) ? ' ' : '');
-            }, $content);
-            $content = $this->patternReplace('/\\s+' . $closingTag . '/i', function ($matches) {
-                return ($this->isInline($matches[2]) ? ' ' : '') . $matches[1];
-            }, $content);
-            $content = $this->patternReplace('/' . $closingTag . '\\s+/i', function ($matches) {
-                return $matches[1] . ($this->isInline($matches[2]) ? ' ' : '');
-            }, $content);
-
-            return $content;
-        }
-
-        if ($this->mode == static::MODE_HARD) {
-            $content = $this->patternReplace($ieConditionalPattern, '$1', $content);
-
-            $content = $this->patternReplace('/\\s+' . $openingTag . '/i', '$1', $content);
-            $content = $this->patternReplace('/' . $openingTag . '\\s+/i', '$1', $content);
-            $content = $this->patternReplace('/\\s+' . $closingTag . '/i', '$1', $content);
-            $content = $this->patternReplace('/' . $closingTag . '\\s+/i', '$1', $content);
-
-            return $content;
-        }
-
-        return $content;
-    }
-
-//    /**
-//     * Remove whitespace around IE conditional comments, both the opening and closing tags.
-//     *
-//     * @param string $content
-//     *
-//     * @return string
-//     */
-//    protected function removeWhitespaceAroundIEConditionals($content)
-//    {
-//        $pattern = '/\\s*(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)\\s*/';
-//
-//        return $this->patternReplace($pattern, ' $1 ', $content);
-//    }
-
     /**
      * Remove new line characters between HTML attributes.
      *
@@ -302,65 +204,70 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         }, $content);
     }
 
-//    /**
-//     * Remote whitespace around opening and closing HTML tags. Allow also for self closing tags.
-//     *
-//     * @param string $content
-//     *
-//     * @return string
-//     */
-//    protected function removeWhitespaceAroundHtmlTags($content)
-//    {
-//        $pattern = '/\\s*?(<([a-z0-9-]+?\\b[^>]*?\\s*?\\/?|\\/[a-z0-9-]+?\\s*?)>)\s*/i';
-//
-//        return $this->patternReplace($pattern, ' $1 ', $content);
-//    }
-
-//    /**
-//     * Replace existing
-//     *
-//     * @param string $content
-//     *
-//     * @return string
-//     */
-//    protected function replaceExistingLineBreaksWithSpace($content)
-//    {
-//        $pattern = '/\\n+/';
-//
-//        return $this->patternReplace($pattern, ' ', $content);
-//    }
-
     /**
-     * Remove whitespace around HTML elements in the content. There are 3 modes that define the nature of this method.
-     *
-     * - MODE_SOFT:   Replace whitespace around ALL elements with a single space or newline.
-     * - MODE_MEDIUM: Remove ALL whitespace around all non-inline elements (Bear in mind, CSS can make inline elements
-     *                behave like block, or block elements like inline etc.)
-     * - MODE_HARD:   Remove ALL whitespace around all elements, which may result in inline elements not being spaced.
+     * Remove white space before and after HTML opening tags, HTML closing tags and IE conditional comments. The set
+     * mode is taken into account and the relevant replacement is made.
      *
      * @param string $content
      *
      * @return string
      */
-    protected function removeWhitespaceAroundHtmlElements($content)
+    protected function removeWhiteSpace($content)
     {
-        $htmlElementPattern = '(<\\/?([a-z0-9-]+?)\\b[^>]*?\\/?>)';
-        if ($this->getMode() == static::MODE_SOFT) {
-            $content = $this->patternReplace('/\\s+' . $htmlElementPattern . '/i', ' $1', $content);
+        // Define a callback that will return a single space BEFORE the entire matched tag if it's inline.
+        $spaceBeforeIfInline = function ($matches) {
+            return ($this->isInline($matches[2]) ? ' ' : '') . $matches[1];
+        };
 
-            return $this->patternReplace('/' . $htmlElementPattern . '\\s+/i', '$1 ', $content);
+        // Define a callback that will return a single space AFTER the entire matched tag if it's inline.
+        $spaceAfterIfInline = function ($matches) {
+            return $matches[1] . ($this->isInline($matches[2]) ? ' ' : '');
+        };
+
+        // Define a set of mappings from pattern to mode specific replacements.
+        $patternMappings = [
+            [
+                'pattern' => '(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)',
+                'replacements' => [
+                    static::MODE_SOFT => [' $1', '$1 '],
+                    static::MODE_MEDIUM => ['$1', '$1'],
+                    static::MODE_HARD => ['$1', '$1']
+                ]
+            ],
+            [
+                'pattern' => '(<([a-z0-9-]+?)\\b[^>]*?\\/?\\s*?>)',
+                'replacements' => [
+                    static::MODE_SOFT => [' $1', '$1 '],
+                    static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
+                    static::MODE_HARD => ['$1', '$1']
+                ]
+            ],
+            [
+                'pattern' => '(<\\/([a-z0-9-]+?)\\b[^>]*>)',
+                'replacements' => [
+                    static::MODE_SOFT => [' $1', '$1 '],
+                    static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
+                    static::MODE_HARD => ['$1', '$1']
+                ]
+            ]
+        ];
+
+        // Go through each pattern mapping and run each pattern with an addition of leading and trailing whitespace. If
+        // matches are found, the corresponding before/after replacements are used for the mode we're currently using.
+        foreach ($patternMappings as $patternMapping) {
+            $pattern = $patternMapping['pattern'];
+            $replacements = $patternMapping['replacements'][$this->mode];
+            $beforeReplacement = $replacements[0];
+            $afterReplacement = $replacements[1];
+
+            if ($this->mode == static::MODE_SOFT)
+                var_dump($pattern);
+
+            $content = $this->patternReplace('/\\s+' . $pattern . '/i', $beforeReplacement, $content);
+            $content = $this->patternReplace('/' . $pattern . '\\s+/i', $afterReplacement, $content);
         }
 
-        if ($this->getMode() == static::MODE_MEDIUM) {
-            return $this->patternReplace('/\\s*' . $htmlElementPattern . '\\s*/i', function ($matches) {
-                if (!isset($matches[2])) {
-                    return $matches[0];
-                }
-
-                return $this->isInline($matches[2]) ? $matches[0] : $matches[1];
-            }, $content);
-        }
-
-        return $this->patternReplace('/\\s*' . $htmlElementPattern . '\\s*/i', '$1', $content);
+        // Return the content.
+        return $content;
     }
 }
