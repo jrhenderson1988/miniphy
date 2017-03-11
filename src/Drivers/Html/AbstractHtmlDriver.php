@@ -6,7 +6,6 @@ use InvalidArgumentException;
 use Miniphy\Drivers\AbstractDriver;
 use Miniphy\Miniphy;
 
-// TODO - make html tags that span multiple lines in between attributes span only one line...
 abstract class AbstractHtmlDriver extends AbstractDriver
 {
     const MODE_SOFT = 1;

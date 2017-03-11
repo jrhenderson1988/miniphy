@@ -2,6 +2,7 @@
 
 namespace Miniphy;
 
+use Miniphy\Drivers\Css\RegexDriver as CssRegexDriver;
 use Miniphy\Drivers\DriverInterface;
 use Miniphy\Drivers\Html\RegexDriver as HtmlRegexDriver;
 use Miniphy\Exceptions\NoSuchDriverException;
@@ -22,6 +23,13 @@ class Miniphy
      * @var string
      */
     protected $defaultHtmlDriverKey = 'regex';
+
+    /**
+     * The default CSS driver.
+     *
+     * @var string
+     */
+    protected $defaultCssDriverKey = 'regex';
 
     /**
      * String utilities class.
@@ -51,6 +59,13 @@ class Miniphy
         $driver = !is_null($driver) ? $driver : $this->getDefaultHtmlDriverKey();
 
         return $this->getDriver('html-' . $driver);
+    }
+
+    public function css($driver = null)
+    {
+        $driver = !is_null($driver) ? $driver : $this->getDefaultHtmlDriverKey();
+
+        return $this->getDriver('css-' . $driver);
     }
 
     /**
@@ -103,6 +118,36 @@ class Miniphy
     public function setDefaultHtmlDriverKey($key)
     {
         $this->defaultHtmlDriverKey = $key;
+    }
+
+    /**
+     * Create a Regex CSS driver.
+     *
+     * @return \Miniphy\Drivers\Css\RegexDriver
+     */
+    public function createCssRegexDriver()
+    {
+        return new CssRegexDriver($this);
+    }
+
+    /**
+     * The default CSS driver key.
+     *
+     * @return string
+     */
+    public function getDefaultCssDriverKey()
+    {
+        return $this->defaultCssDriverKey;
+    }
+
+    /**
+     * Set the default CSS driver key.
+     *
+     * @param string $key
+     */
+    public function setDefaultCssDriverKey($key)
+    {
+        $this->defaultCssDriverKey = $key;
     }
 
     /**
