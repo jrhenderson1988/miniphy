@@ -14,10 +14,8 @@ class MiniphyServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('miniphy', function() {
-            return new Miniphy();
-        });
-
+        $this->registerConfig();
+        $this->registerMiniphy();
         $this->registerCompiler();
     }
 
@@ -28,6 +26,53 @@ class MiniphyServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if (config('miniphy.blade')) {
+            $this->overrideBladeCompiler();
+        }
+    }
+
+    /**
+     * Make Laravel aware of the publishable config file and merge the user defined settings with the defaults from it.
+     */
+    protected function registerConfig()
+    {
+        $config = realpath(__DIR__) . '/../config/miniphy.php';
+
+        $this->publishes([$config => config_path('miniphy.php')]);
+
+        $this->mergeConfigFrom($config, 'miniphy');
+    }
+
+    /**
+     * Register the Miniphy instance with the application's IoC container.
+     */
+    protected function registerMiniphy()
+    {
+        $this->app->singleton('miniphy', function() {
+            $miniphy = new Miniphy();
+
+            $miniphy->setDefaultHtmlDriverKey(config('miniphy.html.driver', 'regex'));
+            $miniphy->setDefaultCssDriverKey(config('miniphy.css.driver', 'regex'));
+
+            // TODO - Set the default HTML mode from the config.
+
+            return $miniphy;
+        });
+    }
+
+    /**
+     * Register the MiniphyCompiler instance that we may use to override the default BladeCompiler if the blade override
+     * is enabled in the config.
+     */
+    protected function registerCompiler()
+    {
+        $this->app->singleton('miniphy.compiler', function ($app) {
+            return new MiniphyCompiler($app['miniphy'], $app['files'], $app->config->get('view.compiled'));
+        });
+    }
+
+    protected function overrideBladeCompiler()
+    {
         $app = $this->app;
 
         $app->view->getEngineResolver()->register('blade', function () use($app) {
@@ -37,17 +82,6 @@ class MiniphyServiceProvider extends ServiceProvider
         });
 
         $app->view->addExtension('blade.php', 'blade');
-    }
-
-    protected function registerCompiler()
-    {
-        $this->app->singleton('miniphy.compiler', function ($app) {
-            $minifier = $app['miniphy'];
-            $files = $app['files'];
-            $storage = $app->config->get('view.compiled');
-
-            return new MiniphyCompiler($minifier, $files, $storage);
-        });
     }
 
     /**
