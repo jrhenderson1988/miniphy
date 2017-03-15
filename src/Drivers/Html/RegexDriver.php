@@ -2,6 +2,8 @@
 
 namespace Miniphy\Drivers\Html;
 
+use Miniphy\Miniphy;
+
 class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
 {
     /**
@@ -229,25 +231,25 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
             [
                 'pattern' => '(<!(?:--\\s*?\\[[^\\]]+?\\]|\\[[^\\]]+?\\]\\s*?--)>)',
                 'replacements' => [
-                    static::MODE_SOFT => [' $1', '$1 '],
-                    static::MODE_MEDIUM => ['$1', '$1'],
-                    static::MODE_HARD => ['$1', '$1']
+                    Miniphy::HTML_MODE_SOFT => [' $1', '$1 '],
+                    Miniphy::HTML_MODE_MEDIUM => ['$1', '$1'],
+                    Miniphy::HTML_MODE_HARD => ['$1', '$1']
                 ]
             ],
             [
                 'pattern' => '(<([a-z0-9-]+?)\\b[^>]*?\\/?\\s*?>)',
                 'replacements' => [
-                    static::MODE_SOFT => [' $1', '$1 '],
-                    static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
-                    static::MODE_HARD => ['$1', '$1']
+                    Miniphy::HTML_MODE_SOFT => [' $1', '$1 '],
+                    Miniphy::HTML_MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
+                    Miniphy::HTML_MODE_HARD => ['$1', '$1']
                 ]
             ],
             [
                 'pattern' => '(<\\/([a-z0-9-]+?)\\b[^>]*>)',
                 'replacements' => [
-                    static::MODE_SOFT => [' $1', '$1 '],
-                    static::MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
-                    static::MODE_HARD => ['$1', '$1']
+                    Miniphy::HTML_MODE_SOFT => [' $1', '$1 '],
+                    Miniphy::HTML_MODE_MEDIUM => [$spaceBeforeIfInline, $spaceAfterIfInline],
+                    Miniphy::HTML_MODE_HARD => ['$1', '$1']
                 ]
             ]
         ];
@@ -256,7 +258,7 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
         // matches are found, the corresponding before/after replacements are used for the mode we're currently using.
         foreach ($patternMappings as $patternMapping) {
             $pattern = $patternMapping['pattern'];
-            $replacements = $patternMapping['replacements'][$this->mode];
+            $replacements = $patternMapping['replacements'][$this->getMode()];
             $beforeReplacement = $replacements[0];
             $afterReplacement = $replacements[1];
 

@@ -50,11 +50,8 @@ class MiniphyServiceProvider extends ServiceProvider
     {
         $this->app->singleton('miniphy', function() {
             $miniphy = new Miniphy();
-
             $miniphy->setDefaultHtmlDriverKey(config('miniphy.html.driver', 'regex'));
-            $miniphy->setDefaultCssDriverKey(config('miniphy.css.driver', 'regex'));
-
-            // TODO - Set the default HTML mode from the config.
+            $miniphy->setHtmlMode(config('miniphy.html.mode', Miniphy::HTML_MODE_SOFT));
 
             return $miniphy;
         });

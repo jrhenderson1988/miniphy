@@ -2,7 +2,7 @@
 
 namespace Miniphy;
 
-use Miniphy\Drivers\Css\RegexDriver as CssRegexDriver;
+use InvalidArgumentException;
 use Miniphy\Drivers\DriverInterface;
 use Miniphy\Drivers\Html\RegexDriver as HtmlRegexDriver;
 use Miniphy\Exceptions\NoSuchDriverException;
@@ -10,6 +10,10 @@ use Miniphy\Helpers\StringHelper;
 
 class Miniphy
 {
+    const HTML_MODE_SOFT = 1;
+    const HTML_MODE_MEDIUM = 2;
+    const HTML_MODE_HARD = 3;
+
     /**
      * Stores instances of all of the created drivers to save re-creating them whenever they're called.
      *
@@ -25,11 +29,11 @@ class Miniphy
     protected $defaultHtmlDriverKey = 'regex';
 
     /**
-     * The default CSS driver.
+     * The HTML mode.
      *
-     * @var string
+     * @var int
      */
-    protected $defaultCssDriverKey = 'regex';
+    protected $htmlMode = 1;
 
     /**
      * String utilities class.
@@ -61,11 +65,61 @@ class Miniphy
         return $this->getDriver('html-' . $driver);
     }
 
-    public function css($driver = null)
+    /**
+     * Set the mode. The current instance is returned for chaining.
+     *
+     * @param int $mode
+     *
+     * @return $this
+     */
+    public function setHtmlMode($mode)
     {
-        $driver = !is_null($driver) ? $driver : $this->getDefaultHtmlDriverKey();
+        if (!$this->isValidHtmlMode($mode)) {
+            throw new InvalidArgumentException('Unexpected mode provided.');
+        }
 
-        return $this->getDriver('css-' . $driver);
+        $this->htmlMode = $mode;
+
+        return $this;
+    }
+
+    /**
+     * Get the mode.
+     *
+     * @return int
+     */
+    public function getHtmlMode()
+    {
+        return $this->htmlMode;
+    }
+
+    /**
+     * Tell if the provided mode is valid.
+     *
+     * @param mixed $mode
+     *
+     * @return bool
+     */
+    public function isValidHtmlMode($mode)
+    {
+        return is_int($mode) && in_array($mode, [static::HTML_MODE_SOFT, static::HTML_MODE_MEDIUM, static::HTML_MODE_HARD]);
+    }
+
+    /**
+     * Get or set the mode. If the parameter is not provided or it is null, the current mode is returned. If the
+     * parameter is provided and not null, the current mode will be set and the current driver instance is returned.
+     *
+     * @param null|int $mode
+     *
+     * @return int|$this
+     */
+    public function htmlMode($mode = null)
+    {
+        if (is_null($mode)) {
+            return $this->getHtmlMode();
+        }
+
+        return $this->setHtmlMode($mode);
     }
 
     /**
@@ -118,36 +172,6 @@ class Miniphy
     public function setDefaultHtmlDriverKey($key)
     {
         $this->defaultHtmlDriverKey = $key;
-    }
-
-    /**
-     * Create a Regex CSS driver.
-     *
-     * @return \Miniphy\Drivers\Css\RegexDriver
-     */
-    public function createCssRegexDriver()
-    {
-        return new CssRegexDriver($this);
-    }
-
-    /**
-     * The default CSS driver key.
-     *
-     * @return string
-     */
-    public function getDefaultCssDriverKey()
-    {
-        return $this->defaultCssDriverKey;
-    }
-
-    /**
-     * Set the default CSS driver key.
-     *
-     * @param string $key
-     */
-    public function setDefaultCssDriverKey($key)
-    {
-        $this->defaultCssDriverKey = $key;
     }
 
     /**
