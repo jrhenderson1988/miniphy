@@ -26,6 +26,9 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
     public function minify($content)
     {
         $content = $this->normalise($content);
+
+        $content = $this->reservePhpTags($content);
+
         $content = $this->reservePres($content);
         $content = $this->reserveTextAreas($content);
         $content = $this->reserveScripts($content);
@@ -126,6 +129,47 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
      */
     protected function reservePhpTags($content)
     {
+//        $length = mb_strlen($content);
+//        if (($position = mb_strpos($content, '<?php')) !== false) {
+//            $position += 5;
+//
+//            $inDoubleQuotedString = false;
+//            $inSingleQuotedString = false;
+//            $inMultilineComment = false;
+//
+//            for ($i = $position; $i < $length; $i++) {
+//                $char = mb_substr($content, $i, 1);
+//
+//                if ($inDoubleQuotedString) {
+//                    if ($char == '"' && mb_substr($content, $i - 1, 1) == '\\') {
+//                        $inDoubleQuotedString = false;
+//                    }
+//                } elseif ($inSingleQuotedString) {
+//
+//                } elseif ($inMultilineComment) {
+//
+//                } elseif ($char == '?' && mb_substr($content, $i + 1, 1) == '>') {
+//                    //
+//                } else {
+//                    if ($char == '"') {
+//                        $inDoubleQuotedString = true;
+//                    }
+//
+//                    if ($char == '\'') {
+//                        $inSingleQuotedString = true;
+//                    }
+//
+//                    if ($char == '/' && mb_substr($content, $i + 1, 1) == '*') {
+//                        $inMultilineComment = true;
+//                        $i += 1;
+//                    }
+//                }
+//
+//
+//            }
+//        }
+
+
         return $this->patternReserve('/<\\?php\\s+?[\\s\\S]+?\\?>/', $content, 'php-tag');
     }
 
