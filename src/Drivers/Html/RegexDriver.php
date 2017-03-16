@@ -4,6 +4,16 @@ namespace Miniphy\Drivers\Html;
 
 use Miniphy\Miniphy;
 
+/**
+ * TODO [Reserving PHP tags]
+ *      - Take into account short opening tags if turned on
+ *      - Take into account the short echo style tags <?= ... ?>
+ *      - Take into account the tag endings that are within strings e.g. <?php echo '?>'; ?>
+ *      - Take into account tag endings that are within multi-line comments
+ *
+ * NOTE: Placing a closing PHP tag ?> inside a multi-line comment appears to be allowed. However, they don't seem to be
+ *       allowed for single line comments.
+ */
 class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
 {
     /**
@@ -105,6 +115,18 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
     protected function normalise($content)
     {
         return str_replace("\r\n", "\n", trim($content));
+    }
+
+    /**
+     * Reserve all PHP tags in the content.
+     *
+     * @param string $content
+     *
+     * @return string
+     */
+    protected function reservePhpTags($content)
+    {
+        return $this->patternReserve('/<\\?php\\s+?[\\s\\S]+?\\?>/', $content, 'php-tag');
     }
 
     /**
