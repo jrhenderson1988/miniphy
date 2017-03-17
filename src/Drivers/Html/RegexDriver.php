@@ -130,26 +130,34 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
     protected function reservePhpTags($content)
     {
 //        $length = mb_strlen($content);
-//        if (($position = mb_strpos($content, '<?php')) !== false) {
-//            $position += 5;
-//
+//        if (($from = mb_strpos($content, '<?php')) !== false) {
 //            $inDoubleQuotedString = false;
 //            $inSingleQuotedString = false;
 //            $inMultilineComment = false;
 //
-//            for ($i = $position; $i < $length; $i++) {
-//                $char = mb_substr($content, $i, 1);
+//            for ($to = $from + 5; $to < $length; $i++) {
+//                $char = mb_substr($content, $to, 1);
 //
 //                if ($inDoubleQuotedString) {
-//                    if ($char == '"' && mb_substr($content, $i - 1, 1) == '\\') {
+//                    if ($char == '\\') {
+//                        $to += 1;
+//                    } elseif ($char == '"') {
 //                        $inDoubleQuotedString = false;
 //                    }
 //                } elseif ($inSingleQuotedString) {
-//
+//                    if ($char == '\\') {
+//                        $to += 1;
+//                    } elseif ($char == '\'') {
+//                        $inSingleQuotedString = false;
+//                    }
 //                } elseif ($inMultilineComment) {
+//                    if ($char == '*' && mb_substr($content, $to + 1, 1) == '/') {
+//                        $inMultilineComment = false;
+//                    }
+//                } elseif ($char == '?' && mb_substr($content, $to + 1, 1) == '>') {
+//                    $to += 2;
 //
-//                } elseif ($char == '?' && mb_substr($content, $i + 1, 1) == '>') {
-//                    //
+//                    dd([$from, $i, mb_substr($content, $from, $to - $from)]);
 //                } else {
 //                    if ($char == '"') {
 //                        $inDoubleQuotedString = true;
@@ -159,14 +167,14 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
 //                        $inSingleQuotedString = true;
 //                    }
 //
-//                    if ($char == '/' && mb_substr($content, $i + 1, 1) == '*') {
+//                    if ($char == '/' && mb_substr($content, $to + 1, 1) == '*') {
 //                        $inMultilineComment = true;
-//                        $i += 1;
+//                        $to += 1;
 //                    }
 //                }
-//
-//
 //            }
+//
+//
 //        }
 
 
