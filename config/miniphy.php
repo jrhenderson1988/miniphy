@@ -4,8 +4,6 @@ return [
 
     'html' => [
 
-        'driver' => 'regex',
-
         'mode' => 1,
 
     ],

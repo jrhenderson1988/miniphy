@@ -3,9 +3,7 @@
 namespace Miniphy;
 
 use InvalidArgumentException;
-use Miniphy\Drivers\DriverInterface;
-use Miniphy\Drivers\Html\RegexDriver as HtmlRegexDriver;
-use Miniphy\Exceptions\NoSuchDriverException;
+use Miniphy\Drivers\HtmlDriver;
 use Miniphy\Helpers\StringHelper;
 
 class Miniphy
@@ -13,20 +11,6 @@ class Miniphy
     const HTML_MODE_SOFT = 1;
     const HTML_MODE_MEDIUM = 2;
     const HTML_MODE_HARD = 3;
-
-    /**
-     * Stores instances of all of the created drivers to save re-creating them whenever they're called.
-     *
-     * @var array
-     */
-    protected $driverCache = [];
-
-    /**
-     * The default HTML driver.
-     *
-     * @var string
-     */
-    protected $defaultHtmlDriverKey = 'regex';
 
     /**
      * The HTML mode.
@@ -43,6 +27,13 @@ class Miniphy
     protected $stringHelper;
 
     /**
+     * Holds an instance of the HTML driver.
+     *
+     * @var \Miniphy\Drivers\HtmlDriver
+     */
+    protected $htmlDriver;
+
+    /**
      * Miniphy constructor.
      */
     public function __construct()
@@ -51,18 +42,20 @@ class Miniphy
     }
 
     /**
-     * Get a HTML driver.
+     * Get (Or create it if it does not already exist) the HTML driver. If non-null content is provided, the HTML driver
+     * will be used to minify the provided content and that will be returned instead.
      *
-     * @param string|null $driver
+     * @param string|null $content
      *
-     * @return \Miniphy\Drivers\DriverInterface
-     * @throws \Miniphy\Exceptions\NoSuchDriverException
+     * @return \Miniphy\Drivers\HtmlDriver|string
      */
-    public function html($driver = null)
+    public function html($content = null)
     {
-        $driver = !is_null($driver) ? $driver : $this->getDefaultHtmlDriverKey();
+        if (!$this->htmlDriver) {
+            $this->htmlDriver = new HtmlDriver($this);
+        }
 
-        return $this->getDriver('html-' . $driver);
+        return is_null($content) ? $this->htmlDriver : $this->htmlDriver->minify($content);
     }
 
     /**
@@ -102,7 +95,9 @@ class Miniphy
      */
     public function isValidHtmlMode($mode)
     {
-        return is_int($mode) && in_array($mode, [static::HTML_MODE_SOFT, static::HTML_MODE_MEDIUM, static::HTML_MODE_HARD]);
+        return is_int($mode) && in_array($mode, [
+            static::HTML_MODE_SOFT, static::HTML_MODE_MEDIUM, static::HTML_MODE_HARD
+        ]);
     }
 
     /**
@@ -120,58 +115,6 @@ class Miniphy
         }
 
         return $this->setHtmlMode($mode);
-    }
-
-    /**
-     * Get the driver specified by the base and key from the driver cache. Create the driver if it does not exist.
-     *
-     * @param string $key
-     *
-     * @return DriverInterface
-     * @throws \Miniphy\Exceptions\NoSuchDriverException
-     */
-    protected function getDriver($key)
-    {
-        if (isset($this->driverCache[$key])) {
-            return $this->driverCache[$key];
-        }
-
-        $method = 'create' . $this->getStringHelper()->studly($key) . 'Driver';
-        if (!method_exists($this, $method)) {
-            throw new NoSuchDriverException("The specified driver, '{$key}' does not exist.");
-        }
-
-        return $this->driverCache[$key] = $this->$method();
-    }
-
-    /**
-     * Create a Regex HTML driver.
-     *
-     * @return \Miniphy\Drivers\Html\RegexDriver
-     */
-    public function createHtmlRegexDriver()
-    {
-        return new HtmlRegexDriver($this);
-    }
-
-    /**
-     * Get the default HTML driver key.
-     *
-     * @return string
-     */
-    public function getDefaultHtmlDriverKey()
-    {
-        return $this->defaultHtmlDriverKey;
-    }
-
-    /**
-     * Set the default HTML driver key.
-     *
-     * @param string $key
-     */
-    public function setDefaultHtmlDriverKey($key)
-    {
-        $this->defaultHtmlDriverKey = $key;
     }
 
     /**

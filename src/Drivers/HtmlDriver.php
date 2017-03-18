@@ -1,6 +1,6 @@
 <?php
 
-namespace Miniphy\Drivers\Html;
+namespace Miniphy\Drivers;
 
 use Miniphy\Miniphy;
 
@@ -14,8 +14,40 @@ use Miniphy\Miniphy;
  * NOTE: Placing a closing PHP tag ?> inside a multi-line comment appears to be allowed. However, they don't seem to be
  *       allowed for single line comments.
  */
-class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
+class HtmlDriver extends AbstractDriver implements DriverInterface
 {
+    /**
+     * The following elements are generally considered inline in HTML. Sourced from Mozilla documentation:
+     * https://developer.mozilla.org/en-US/docs/Web/HTML/Inline_elements
+     *
+     * @var array
+     */
+    protected $inlineElements = [
+        'a', 'b', 'big', 'i', 'small', 'tt', 'abbr', 'acronym', 'cite', 'code', 'dfn', 'em', 'kbd', 'strong', 'samp',
+        'time', 'var', 'bdo', 'br', 'img', 'map', 'object', 'q', 'script', 'span', 'sub', 'sup', 'button', 'input',
+        'label', 'select', 'textarea'
+    ];
+
+    /**
+     * The following elements are generally considered block-level in HTML. Sourced from Mozilla documentation:
+     * https://developer.mozilla.org/en-US/docs/Web/HTML/Block-level_elements
+     *
+     * @var array
+     */
+    protected $blockElements = [
+        'address', 'article', 'aside', 'blockquote', 'br', 'canvas', 'dd', 'div', 'dl', 'fieldset', 'figcaption',
+        'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hgroup', 'hr', 'li', 'main', 'nav',
+        'noscript', 'ol', 'output', 'p', 'pre', 'section', 'table', 'tfoot', 'ul', 'video'
+    ];
+
+    /**
+     * The tag format that we will use to reserve HTML elements is a div with an ID of the reservation key. This should
+     * ensure that the minification process treats reserved items as block elements.
+     *
+     * @var string
+     */
+    protected $reservationTagFormat = '<div id="%key%"></div>';
+
     /**
      * Minify the provided content.
      *
@@ -26,9 +58,7 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
     public function minify($content)
     {
         $content = $this->normalise($content);
-
         $content = $this->reservePhpTags($content);
-
         $content = $this->reservePres($content);
         $content = $this->reserveTextAreas($content);
         $content = $this->reserveScripts($content);
@@ -43,50 +73,57 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
     }
 
     /**
-     * Replace areas of the provided $content which match the $pattern provided, with the $replacement provided. If a
-     * callback is provided as the replacement, then it is passed to preg_replace_callback and the value returned from
-     * the callback will be the replacement.
+     * Get the set of inline elements.
      *
-     * @param string $pattern
-     * @param callable|string $replacement
-     * @param string $content
-     *
-     * @return string
+     * @return array
      */
-    protected function patternReplace($pattern, $replacement, $content)
+    public function getInlineElements()
     {
-        $method = 'preg_replace' . (is_callable($replacement) ? '_callback' : '');
-
-        return $method($pattern, $replacement, $content);
+        return $this->inlineElements;
     }
 
     /**
-     * Remove some content from the value, using the regular expression pattern provided.
+     * Tell if the provided tag is inline by default.
      *
-     * @param string $pattern
-     * @param string $content
+     * @param string $tag
      *
-     * @return string
+     * @return bool
      */
-    protected function patternRemove($pattern, $content)
+    protected function isInline($tag)
     {
-        return $this->patternReplace($pattern, '', $content);
+        return in_array($tag, $this->inlineElements);
     }
 
     /**
-     * Make reservations using the provided pattern.
+     * Get the set of block elements.
      *
-     * @param string $pattern
-     * @param string $content
-     * @param string $prefix
-     *
-     * @return string
+     * @return array
      */
-    protected function patternReserve($pattern, $content, $prefix = '')
+    public function getBlockElements()
     {
-        return $this->patternReplace($pattern, function ($matches) use($prefix) {
-            return $this->buildReservationTag($this->reserve($matches[0], $prefix));
-        }, $content);
+        return $this->blockElements;
+    }
+
+    /**
+     * Tell if the provided tag is block by default.
+     *
+     * @param string $tag
+     *
+     * @return bool
+     */
+    protected function isBlock($tag)
+    {
+        return in_array($tag, $this->blockElements);
+    }
+
+    /**
+     * Get the current mode.
+     *
+     * @return int
+     */
+    public function getMode()
+    {
+        return $this->miniphy->getHtmlMode();
     }
 
     /**
@@ -129,56 +166,83 @@ class RegexDriver extends AbstractHtmlDriver implements HtmlDriverInterface
      */
     protected function reservePhpTags($content)
     {
-//        $length = mb_strlen($content);
-//        if (($from = mb_strpos($content, '<?php')) !== false) {
-//            $inDoubleQuotedString = false;
-//            $inSingleQuotedString = false;
-//            $inMultilineComment = false;
-//
-//            for ($to = $from + 5; $to < $length; $i++) {
-//                $char = mb_substr($content, $to, 1);
-//
-//                if ($inDoubleQuotedString) {
-//                    if ($char == '\\') {
-//                        $to += 1;
-//                    } elseif ($char == '"') {
-//                        $inDoubleQuotedString = false;
-//                    }
-//                } elseif ($inSingleQuotedString) {
-//                    if ($char == '\\') {
-//                        $to += 1;
-//                    } elseif ($char == '\'') {
-//                        $inSingleQuotedString = false;
-//                    }
-//                } elseif ($inMultilineComment) {
-//                    if ($char == '*' && mb_substr($content, $to + 1, 1) == '/') {
-//                        $inMultilineComment = false;
-//                    }
-//                } elseif ($char == '?' && mb_substr($content, $to + 1, 1) == '>') {
-//                    $to += 2;
-//
-//                    dd([$from, $i, mb_substr($content, $from, $to - $from)]);
-//                } else {
-//                    if ($char == '"') {
-//                        $inDoubleQuotedString = true;
-//                    }
-//
-//                    if ($char == '\'') {
-//                        $inSingleQuotedString = true;
-//                    }
-//
-//                    if ($char == '/' && mb_substr($content, $to + 1, 1) == '*') {
-//                        $inMultilineComment = true;
-//                        $to += 1;
-//                    }
-//                }
-//            }
-//
-//
-//        }
+        $offset = 0;
+        while (($position = mb_strpos($content, '<?php', $offset)) !== false) {
+            // To be considered a valid PHP tag, the following character MUST be a whitespace character. If it's not we
+            // can simply increase the offset and continue until we find a valid PHP tag.
+            if (!in_array(mb_substr($content, $position + 5, 1), [" ", "\t", "\n", "\r", "\0", "\x0B"])) {
+                $offset += 5;
+                continue;
+            }
 
+            // At this point we've found a valid PHP opening tag. We define the following as states when parsing the PHP
+            // tag. If we find a closing PHP tag, when in one of these states we can ignore it.
+            $inDoubleQuotedString = false;
+            $inSingleQuotedString = false;
+            $inMultiLineComment = false;
 
-        return $this->patternReserve('/<\\?php\\s+?[\\s\\S]+?\\?>/', $content, 'php-tag');
+            // Starting at the position after the whitespace character, we're going to loop through the rest of the
+            // content.
+            for ($i = $position + 6, $length = mb_strlen($content); $i < $length; $i++) {
+                // Get the current character.
+                $char = mb_substr($content, $i, 1);
+
+                if ($inDoubleQuotedString) {
+                    // If we're in a double quoted string and we hit a backslash character, we assume that the following
+                    // character is escaped e.g. \r, \n, \\, \", we skip one character by adding 1 to i. If we happen to
+                    // hit a double quote character then we've hit an unescaped double quote and therefore are at the
+                    // end of the double quoted string.
+                    if ($char == '\\') {
+                        $i += 1;
+                    } elseif ($char == '"') {
+                        $inDoubleQuotedString = false;
+                    }
+                } elseif ($inSingleQuotedString) {
+                    // A backslash may be used in a single quoted string to escape a backslash or to escape a single
+                    // quote. All other instances of backslash are treated as literal backslashes. Therefore if the
+                    // character following the backslash is either another backslash or a single quote, we may simply
+                    // skip the following character. If we hit a single quote when in a single quoted string, that is
+                    // not preceded by a backslash, then we have hit the end of the string.
+                    if ($char == '\\' && in_array(mb_substr($content, $i + 1, 1), ['\'', '\\'])) {
+                        $i += 1;
+                    } elseif ($char == '\'') {
+                        $inSingleQuotedString = false;
+                    }
+                } elseif ($inMultiLineComment) {
+                    // If we're in a multi-line comment and we hit an asterisk (*) character, we can look at the
+                    // following character to see if it is a forward slash, which would end the multi-line comment. If
+                    // so we can change the state to reflect that we're no longer in a multi-line comment and skip ahead
+                    // one character to place the pointer after the forward slash.
+                    if ($char == '*' && mb_substr($content, $i + 1, 1) == '/') {
+                        $i += 1;
+                        $inMultiLineComment = false;
+                    }
+                } else {
+                    // If we're not currently in a double quoted string, single quoted string or a multi-line comment,
+                    // we need to check for the relevant characters to check the state. If we hit a double quote
+                    // character, the state can be adjusted to indicate that we're in a double quoted string. Similarly,
+                    // we can update the state to single quoted string when hitting a single quote character and a
+                    // multi-line comment for an asterisk character (*) followed by a forward slash (We can skip ahead
+                    // one at this point too). Finally, if we're not in any of the single/double quoted string states or
+                    // a multiline comment state and we hit a question mark immediately proceeded by a greater than
+                    // symbol, we have hit the end of the PHP tag.
+                    if ($char == '"') {
+                        $inDoubleQuotedString = true;
+                    } elseif ($char == '\'') {
+                        $inSingleQuotedString = true;
+                    } elseif ($char == '/' && mb_substr($content, $i + 1, 1) == '*') {
+                        $inMultiLineComment = true;
+                        $i += 1;
+                    } elseif ($char == '?' && mb_substr($content, $i + 1, 1) == '>') {
+                        $i += 2;
+                        $content = $this->substringReserve($position, $i - $position, $content, 'phptag');
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $content;
     }
 
     /**

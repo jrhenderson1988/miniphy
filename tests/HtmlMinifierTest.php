@@ -8,10 +8,10 @@ class HtmlMinifierTest extends TestCase
     {
         $miniphy = $this->createMiniphyInstance();
 
-        $this->assertInstanceOf('Miniphy\\Drivers\\Html\\RegexDriver', $miniphy->html());
+        $this->assertInstanceOf('Miniphy\\Drivers\\HtmlDriver', $miniphy->html());
     }
 
-    public function testMinification()
+    public function testHtmlMinification()
     {
         $miniphy = $this->createMiniphyInstance();
 
@@ -25,14 +25,8 @@ class HtmlMinifierTest extends TestCase
 
                 foreach ($modes as $modeName => $mode) {
                     $miniphy->setHtmlMode($mode);
-
-                    $drivers = ['regex'];
-                    foreach ($drivers as $driver) {
-                        $htmlMinifier = $miniphy->html($driver);
-
-                        if (($output = $this->loadFile('html/' . $directory . '/output_mode_' . $modeName . '.html')) !== false) {
-                            $this->assertEquals($output, $htmlMinifier->minify($input));
-                        }
+                    if (($output = $this->loadFile('html/' . $directory . '/output_mode_' . $modeName . '.html')) !== false) {
+                        $this->assertEquals($output, $miniphy->html($input));
                     }
                 }
             }

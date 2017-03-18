@@ -50,7 +50,6 @@ class MiniphyServiceProvider extends ServiceProvider
     {
         $this->app->singleton('miniphy', function() {
             $miniphy = new Miniphy();
-            $miniphy->setDefaultHtmlDriverKey(config('miniphy.html.driver', 'regex'));
             $miniphy->setHtmlMode(config('miniphy.html.mode', Miniphy::HTML_MODE_SOFT));
 
             return $miniphy;
@@ -68,6 +67,9 @@ class MiniphyServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Override the default blade compiler with our own. This allows us to provide automatic blade view minification.
+     */
     protected function overrideBladeCompiler()
     {
         $app = $this->app;
