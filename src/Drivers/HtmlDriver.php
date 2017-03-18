@@ -137,7 +137,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
      */
     protected function reserveTags($tag, $content, $prefix = '')
     {
-        $tag = strtolower(trim($tag));
+        $tag = mb_strtolower(trim($tag));
 
         return $this->patternReserve(
             "/<{$tag}\\b[^>]*?>([\\s\\S]*?)<\\/{$tag}>/i",
@@ -301,7 +301,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
     protected function removeHtmlComments($content)
     {
         return $this->patternReplace('/<!--([\s\S]*?)-->/i', function($matches) {
-            return strpos($matches[0], '[if') === false || strpos($matches[0], 'endif') === false ? '' : $matches[0];
+            return mb_strpos($matches[0], '[if') === false || mb_strpos($matches[0], 'endif') === false ? '' : $matches[0];
         }, $content);
     }
 
@@ -333,7 +333,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
     protected function removeNewLineCharactersBetweenAttributes($content)
     {
         return $this->patternReplace('/<[a-z0-9-]+?\\b[^>]*?\\/?>/i', function ($matches) {
-            if (strpos($matches[0], "\n") === false) {
+            if (mb_strpos($matches[0], "\n") === false) {
                 return $matches[0];
             }
 
