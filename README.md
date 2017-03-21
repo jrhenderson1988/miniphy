@@ -4,7 +4,41 @@ A PHP based HTML minifier that's designed to be simple. It offers built in suppo
 
 # Installation
 
-TODO
+You can install Miniphy using composer. Just run the following command to get the latest version:
+ 
+    $ composer require jrhenderson1988/miniphy
+
+Or you can add it manually to your `composer.json` file and run `composer update`.
+
+    {
+        "require": {
+            "jrhenderson1988/miniphy": "^1.0"
+        }
+    }
+
+If you're using Laravel, don't forget to add the `MiniphyServiceProvider` to your `config/app.php`.
+
+    // ...
+    
+    Illuminate\Validation\ValidationServiceProvider::class,
+    Illuminate\View\ViewServiceProvider::class,
+
+    /**
+     * Package Service Providers...
+     */
+    Miniphy\MiniphyServiceProvider::class,
+    
+    // ...
+
+If you want to use the Facade, make sure you add it to your `aliases` in `config/app.php`.
+
+        // ...
+        
+        'Validator' => Illuminate\Support\Facades\Validator::class,
+        'View' => Illuminate\Support\Facades\View::class,
+
+        'Miniphy' => Miniphy\Facades\Miniphy::class,
+    ],
 
 # Usage
 
@@ -47,16 +81,34 @@ You can easily set the mode by calling the chainable `setHtmlMode` method on the
     
 ### Laravel
 
-When you've set up the package correctly in Laravel you can use Miniphy very easily, either through using the Facade or you can get an instance of `Miniphy` from the IoC container:
+When you've set up the package correctly in Laravel you can use Miniphy very easily, either through using the Facade, dependency injection or you can get an instance of `Miniphy` from the IoC container:
 
 #### Facade
 
     $minified = Miniphy::html(' Your HTML content ');
     
+#### Dependency Injection
+
+    <?php
+    
+    namespace App\Http\Controllers;
+    
+    use Miniphy\Miniphy;
+
+    class MyController extends Controller
+    {
+        public function myMethod(Miniphy $miniphy)
+        {
+            return $miniphy->html(' Your HTML content ');
+        }
+    }
+    
 #### IoC container
 
     $miniphy = app('miniphy');
     $minified = $miniphy->html(' Your HTML content ');
+    
+
 
 ## TODO
 
