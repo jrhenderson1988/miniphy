@@ -1,0 +1,3 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><title>Document</title></head><body><div class="site-layout"><?php echo 'This is a test ?>';/**/ ?><p>This is a paragraph with a<a href="/test">link</a>, and two<span>span</span><span>tags</span>.</p><div id="list"><ul><li>This is a list element</li><li>This is a<strong>strong</strong>tag.</li></ul></div><?php if ($something) {
+                runFunction('test');
+            } ?><p>Paragraph with an emoticon:<img src="/smile.jpg" alt="image">.</p><!--[if IE 6]><p>Special instructions for IE 6 here</p><![endif]--></div></body></html>

@@ -32,4 +32,26 @@ class HtmlMinifierTest extends TestCase
             }
         }
     }
+
+    public function testHtmlMinificationInPHPTemplates()
+    {
+        $miniphy = $this->createMiniphyInstance();
+
+        foreach ($this->directoriesIn('php') as $directory) {
+            if (($input = $this->loadFile('php/' . $directory . '/input.php')) !== false) {
+                $modes = [
+                    'soft' => Miniphy::HTML_MODE_SOFT,
+                    'medium' => Miniphy::HTML_MODE_MEDIUM,
+                    'hard' => Miniphy::HTML_MODE_HARD
+                ];
+
+                foreach ($modes as $modeName => $mode) {
+                    $miniphy->setHtmlMode($mode);
+                    if (($output = $this->loadFile('php/' . $directory . '/output_mode_' . $modeName . '.php')) !== false) {
+                        $this->assertEquals($output, $miniphy->html($input));
+                    }
+                }
+            }
+        }
+    }
 }
