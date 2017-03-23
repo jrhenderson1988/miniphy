@@ -48,21 +48,6 @@ class HtmlMinifierTest extends TestCase
                 foreach ($modes as $modeName => $mode) {
                     $miniphy->setHtmlMode($mode);
                     if (($output = $this->loadFile('php/' . $directory . '/output_mode_' . $modeName . '.php')) !== false) {
-//                        if ($directory == 3) {
-//                            $minified = $miniphy->html($input);
-//
-//                            for ($i = 0, $len = mb_strlen($output); $i < $len; $i++) {
-//                                if (mb_substr($minified, $i, 1) == mb_substr($output, $i, 1)) {
-//
-//                                } else {
-//                                    echo "\n";
-//                                    var_dump(mb_substr($minified, $i), mb_substr($output, $i));
-//                                    break;
-//                                }
-//                            }
-////                            die('lol');
-//                        }
-
                         $this->assertEquals($output, $miniphy->html($input));
                     }
                 }
