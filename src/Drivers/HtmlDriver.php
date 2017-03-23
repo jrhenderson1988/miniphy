@@ -4,16 +4,6 @@ namespace Miniphy\Drivers;
 
 use Miniphy\Miniphy;
 
-/**
- * TODO [Reserving PHP tags]
- *      - Take into account short opening tags if turned on
- *      - Take into account the short echo style tags <?= ... ?>
- *      - Take into account the tag endings that are within strings e.g. <?php echo '?>'; ?>
- *      - Take into account tag endings that are within multi-line comments
- *
- * NOTE: Placing a closing PHP tag ?> inside a multi-line comment appears to be allowed. However, they don't seem to be
- *       allowed for single line comments.
- */
 class HtmlDriver extends AbstractDriver implements DriverInterface
 {
     /**

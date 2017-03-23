@@ -81,7 +81,7 @@ You can easily set the mode by calling the chainable `setHtmlMode` method on the
     
 ### Laravel
 
-When you've set up the package correctly in Laravel you can use Miniphy very easily, either through using the Facade, dependency injection or you can get an instance of `Miniphy` from the IoC container:
+When you've set up the package correctly in Laravel you can use Miniphy very easily, either through using the Facade, dependency injection or you can get an instance of `Miniphy` from the IoC container. Alternatively, you may enable compile-time Blade optimisation through the settings to automatically minify your blade templates when they're generated:
 
 #### Facade
 
@@ -108,9 +108,27 @@ When you've set up the package correctly in Laravel you can use Miniphy very eas
     $miniphy = app('miniphy');
     $minified = $miniphy->html(' Your HTML content ');
     
+#### Compile-time Blade optimisation
 
+If you want your Blade templates to be minified at compile time you may enable compile-time blade optimisation through the settings.
+
+In `config/miniphy.php`
+
+    <?php
+    
+    return [
+        // ...
+        
+        'blade' => true,
+        
+        // ...
+    ];
+
+> **Important Note:** Laravel caches the Blade templates after they've been compiled. If you find that your views are not being minified after enabling blade optimisation you may need to run `php artisan view:clear`. This will clear the view cache and the templates will be re-compiled. Similarly, if you want to disable Blade optimisation, you will need to run this command to remove the cached, minified views.
 
 ## TODO
 
+- When reserving PHP tags, allow for short opening tags
+- When reserving PHP tags, take into account short echo style tags `<?= $value ?>`
 - Add support for minifying inline CSS.
 - Add support for minifying inline Javascript.
