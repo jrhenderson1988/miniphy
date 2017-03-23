@@ -14,7 +14,7 @@ class StringHelper
      *
      * @return string
      */
-    public function random($length = 12, $alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+    public function random($length = 40, $alphabet = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
     {
         $random = '';
         $randomInt = is_callable('random_int') ? 'random_int' : 'rand';

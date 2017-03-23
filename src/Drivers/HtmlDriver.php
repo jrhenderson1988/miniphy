@@ -46,7 +46,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
      *
      * @var string
      */
-    protected $reservationTagFormat = '<div id="%key%"></div>';
+//    protected $reservationTagFormat = '<div id="%key%"></div>';
 
     /**
      * Minify the provided content.
@@ -68,6 +68,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
         $content = $this->removeNewLineCharactersBetweenAttributes($content);
         $content = $this->removeWhiteSpace($content);
         $content = $this->restoreReservations($content);
+//        $content = $this->restoreReservations($content);
 
         return $content;
     }
@@ -131,18 +132,18 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
      *
      * @param string $tag
      * @param string $content
-     * @param string $prefix
+     * @param string $replacement
      *
      * @return string
      */
-    protected function reserveTags($tag, $content, $prefix = '')
+    protected function reserveTags($tag, $content, $replacement = null)
     {
         $tag = mb_strtolower(trim($tag));
 
         return $this->patternReserve(
             "/<{$tag}\\b[^>]*?>([\\s\\S]*?)<\\/{$tag}>/i",
             $content,
-            !empty($prefix) ? $prefix : $tag
+            $replacement
         );
     }
 
@@ -235,7 +236,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
                         $i += 1;
                     } elseif ($char == '?' && mb_substr($content, $i + 1, 1) == '>') {
                         $i += 2;
-                        $content = $this->substringReserve($position, $i - $position, $content, 'phptag');
+                        $content = $this->substringReserve($position, $i - $position, $content);
                         break;
                     }
                 }
@@ -254,7 +255,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
      */
     protected function reservePres($content)
     {
-        return $this->reserveTags('pre', $content);
+        return $this->reserveTags('pre', $content, '<pre id="%key%"></pre>');
     }
 
     /**
@@ -266,7 +267,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
      */
     protected function reserveTextAreas($content)
     {
-        return $this->reserveTags('textarea', $content);
+        return $this->reserveTags('textarea', $content, '<textarea id="%key%"></textarea>');
     }
 
     /**
@@ -277,7 +278,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
      */
     protected function reserveScripts($content)
     {
-        return $this->reserveTags('script', $content);
+        return $this->reserveTags('script', $content, '<script id="%key%"></script>');
     }
 
     /**
@@ -288,7 +289,7 @@ class HtmlDriver extends AbstractDriver implements DriverInterface
      */
     protected function reserveStyles($content)
     {
-        return $this->reserveTags('style', $content);
+        return $this->reserveTags('style', $content, '<style id="%key%"></style>');
     }
 
     /**

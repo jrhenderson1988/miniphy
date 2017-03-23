@@ -24,7 +24,7 @@ abstract class AbstractDriver
      *
      * @var string
      */
-    protected $reservationTagFormat = '%key%';
+    protected $defaultReservationReplacement = '%key%';
 
     /**
      * AbstractDriver constructor.
@@ -40,15 +40,17 @@ abstract class AbstractDriver
      * Reserve the the provided content and return the randomly generated, unique key.
      *
      * @param string $content
-     * @param string $prefix
+     * @param string $replacement
      * @return string
      */
-    protected function reserve($content, $prefix = '')
+    protected function reserve($content, $replacement = null)
     {
-        $key = (!empty($prefix) ? $prefix . '-' : '') . $this->miniphy->getStringHelper()->random();
+        $key = null;
 
-        while (isset($this->reservations[$key])) {
-            $key = (!empty($prefix) ? $prefix . '-' : '') . $this->miniphy->getStringHelper()->random();
+        while (is_null($key) || isset($this->reservations[$key])) { // || mb_strpos($target, $content) !== false
+            $key = $this->buildReservationTag(
+                $this->miniphy->getStringHelper()->random(), $replacement
+            );
         }
 
         $this->reservations[$key] = $content;
@@ -65,8 +67,19 @@ abstract class AbstractDriver
      */
     protected function restoreReservations($content)
     {
-        foreach ($this->reservations as $key => $reserved) {
-            $content = str_replace($this->buildReservationTag($key), $reserved, $content);
+        while (1) {
+            $replacements = 0;
+
+            foreach ($this->reservations as $key => $reserved) {
+                if (mb_strpos($content, $key) !== false) {
+                    $content = str_replace($key, $reserved, $content);
+                    $replacements++;
+                }
+            }
+
+            if ($replacements <= 0) {
+                return $content;
+            }
         }
 
         return $content;
@@ -75,13 +88,16 @@ abstract class AbstractDriver
     /**
      * Build a reservation tag using the reservation tag format and the provided key.
      *
-     * @param string $key
+     * @param string      $key
+     * @param string|null $replacement
      *
      * @return string
      */
-    protected function buildReservationTag($key)
+    protected function buildReservationTag($key, $replacement = null)
     {
-        return str_replace('%key%', $key, $this->reservationTagFormat);
+        $replacement = !is_null($replacement) ? $replacement : $this->defaultReservationReplacement;
+
+        return str_replace('%key%', $key, $replacement);
     }
 
     /**
@@ -120,14 +136,14 @@ abstract class AbstractDriver
      *
      * @param string $pattern
      * @param string $content
-     * @param string $prefix
+     * @param string $replacement
      *
      * @return string
      */
-    protected function patternReserve($pattern, $content, $prefix = '')
+    protected function patternReserve($pattern, $content, $replacement = null)
     {
-        return $this->patternReplace($pattern, function ($matches) use($prefix) {
-            return $this->buildReservationTag($this->reserve($matches[0], $prefix));
+        return $this->patternReplace($pattern, function ($matches) use($replacement) {
+            return $this->buildReservationTag($this->reserve($matches[0], $replacement));
         }, $content);
     }
 
@@ -138,14 +154,14 @@ abstract class AbstractDriver
      * @param int    $from
      * @param int    $length
      * @param string $content
-     * @param string $prefix
+     * @param string $replacement
      *
      * @return string
      */
-    protected function substringReserve($from, $length, $content, $prefix = '')
+    protected function substringReserve($from, $length, $content, $replacement = null)
     {
         $reserved = mb_substr($content, $from, $length);
-        $replacement = $this->buildReservationTag($this->reserve($reserved, $prefix));
+        $replacement = $this->buildReservationTag($this->reserve($reserved, $replacement));
         $before = mb_substr($content, 0, $from);
         $after = mb_substr($content, $from + $length);
 
